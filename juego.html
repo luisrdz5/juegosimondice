@@ -82,6 +82,11 @@
       .hide {
         display: none;
       }
+
+      * {
+          font-family:'Arial';
+      }
+
     </style>
   </head>
   <body>
@@ -92,25 +97,28 @@
       <div id="verde" class="color verde right" data-color="verde"></div>
       <button id="btnEmpezar" class="btn-start" onclick="empezarJuego()">Empezar a jugar!</button>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sweetalert/2.1.2/sweetalert.min.js"> </script>
     <script>
       const celeste = document.getElementById('celeste')
       const violeta = document.getElementById('violeta')
       const naranja = document.getElementById('naranja')
       const verde = document.getElementById('verde')
       const btnEmpezar = document.getElementById('btnEmpezar')
-      const ULTIMO_NIVEL  = 10 
+      const ULTIMO_NIVEL  = 5 
 
       class Juego {
         constructor() {
+            this.inicializar = this.inicializar.bind(this)
             this.inicializar()
             this.generarSecuencia()
-            setTimeout(this.siguienteNivel, 200)
+            setTimeout(this.siguienteNivel, 500)
         }
 
         inicializar() {
-            this.elegirColor = this.elegirColor.bind(this)
+            this.inicializar = this.inicializar.bind(this)
             this.siguienteNivel = this.siguienteNivel.bind(this)
-            btnEmpezar.classList.add('hide')
+            this.elegirColor = this.elegirColor.bind(this)
+            this.toggleBtnEmpezar()
             this.nivel=1
             this.colores = {
                 celeste,
@@ -119,8 +127,21 @@
                 verde
             }
         }
+        toggleBtnEmpezar(){
+            if(btnEmpezar.classList.contains('hide')){
+                btnEmpezar.classList.remove('hide')
+            }else{
+                btnEmpezar.classList.add('hide')
+            }
+        }
         generarSecuencia(){
             this.secuencia = new Array(ULTIMO_NIVEL).fill(0).map(n => Math.floor(Math.random() * 4))
+        }
+        iluminarSecuencia(){
+            for (let i=0; i < this.nivel;i++ ){
+                const color = this.transformarNumeroAColor(this.secuencia[i])
+                setTimeout(() => this.iluminarColor(color) , 1000 * i)
+            }
         }
         siguienteNivel() {
             this.subnivel=0
@@ -151,12 +172,7 @@
                     return 3
             }
         }        
-        iluminarSecuencia(){
-            for (let i=0; i < this.nivel;i++ ){
-                const color = this.transformarNumeroAColor(this.secuencia[i])
-                setTimeout(() => this.iluminarColor(color) , 1000 * i)
-            }
-        }
+
         iluminarColor(color){
             this.colores[color].classList.add('light')
             setTimeout(() => this.apagarColor(color) , 350)
@@ -165,6 +181,7 @@
             this.colores[color].classList.remove('light')
         }
         agregarEventosClick() {
+            //console.log(this.colores)
             this.colores.celeste.addEventListener('click', this.elegirColor)
             this.colores.verde.addEventListener('click', this.elegirColor)
             this.colores.violeta.addEventListener('click', this.elegirColor)
@@ -184,20 +201,31 @@
                 this.subnivel++
                 if(this.subnivel === this.nivel){
                     this.nivel++
-                    //this.eliminarEventosClick()
+                    this.eliminarEventosClick()
                     if(this.nivel === (ULTIMO_NIVEL + 1)){
-                        //gano
+                        this.ganoElJuego()
                     }else{
-                        setTimeout(this.siguienteNivel , 1000)
+                        setTimeout(this.siguienteNivel , 500)
                     }
+                }
 
-                }
-                else {
-                    //perdio
-                }
             }
-
+            else {
+                this.perdioElJuego()
+            }
         }
+        ganoElJuego() {
+            swal('Juego de Simon Dice', 'Felicitaciones, Ganaste el juego!', 'success')
+            .then(this.inicializar)
+        }
+        perdioElJuego() {
+            swal('Juego de Simon Dice', 'Lo Siento, Perdiste el juego!', 'error')
+            .then(() => {
+                this.eliminarEventosClick()
+                this.inicializar()
+                
+            })
+        }   
       }
       function empezarJuego() {
         window.juego = new Juego()
